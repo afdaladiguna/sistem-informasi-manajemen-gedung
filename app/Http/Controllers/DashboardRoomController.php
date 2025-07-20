@@ -100,7 +100,7 @@ class DashboardRoomController extends Controller
 
         // 2. Fetch approved/pending bookings for all rooms within this date range.
         // Eager load the 'user' relationship to prevent N+1 query issues.
-        $bookings = Rent::whereIn('status', ['pending', 'disetujui'])
+        $bookings = Rent::whereIn('status', ['pending', 'disewa','disetujui'])
                         ->whereBetween('time_start_use', [$startDate, $endDate])
                         ->with('user')
                         ->get();

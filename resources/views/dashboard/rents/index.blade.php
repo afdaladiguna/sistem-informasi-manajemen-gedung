@@ -18,6 +18,7 @@
     @endif
     @if (auth()->user()->role_id <= 4)
       @endif
+      <a href="/dashboard/rents/export-pdf" class="btn btn-primary mb-3">Export to PDF</a>
       <div class="table-responsive">
         <table class="table table-hover table-stripped table-bordered text-center dt-head-center" id="datatable">
           <thead class="table-info">
@@ -33,9 +34,7 @@
                 <th scope="row">Waktu Transaksi</th>
                 <th scope="row">Kembalikan</th>
                 <th scope="row">Status Sewa</th>
-                @if (auth()->user()->role_id <= 2)
-                  <th scope="row">Action</th>
-                  @endif
+                <th scope="row">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -63,6 +62,7 @@
                 <form action="/dashboard/rents/{{ $rent->id }}" method="post" class="d-inline">
                   @method('delete')
                   @csrf
+                  <a href="/dashboard/rents/{{ $rent->id }}/invoice" class="bi bi-receipt text-success border-0"></a>
                   <button type="submit" class="bi bi-trash-fill text-danger border-0" onclick="return confirm('Hapus data peminjaman?')"></button>
                 </form>
               </td>
@@ -90,6 +90,13 @@
                   @endif
                   @endif
                   <td>{{ $rent->status }}</td>
+                  <td>
+                    @if($rent->status == 'disetujui' || $rent->status == 'disewa' || $rent->status == 'selesai')
+                    <a href="/dashboard/rents/{{ $rent->id }}/invoice" class="bi bi-receipt text-success border-0"></a>
+                    @else
+                    -
+                    @endif
+                  </td>
               </tr>
               @endforeach
               @endif

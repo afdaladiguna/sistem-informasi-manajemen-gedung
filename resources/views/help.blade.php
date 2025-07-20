@@ -20,6 +20,16 @@
             <li>Untuk mengecek status reservasi Anda (menunggu konfirmasi, disetujui, atau ditolak), silakan periksa menu <strong>"Daftar Reservasi"</strong> atau halaman profil Anda.</li>
         </ul>
     </div>
+    <div class="contact-us mt-4">
+        <h2>HUBUNGI KAMI</h2>
+        <div class="list-tahapan p-5">
+            <p>Jika Anda memiliki pertanyaan lebih lanjut atau mengalami kendala dalam penggunaan aplikasi, jangan ragu untuk menghubungi kami:</p>
+            <ul>
+                <li><strong>Kepala Gedung:</strong> 0812-3456-7890</li>
+                <li><strong>Email:</strong> support@gedungsejahtera.com</li>
+            </ul>
+        </div>
+    </div>
 </div>
 {{-- ============================ --}}
 @endsection

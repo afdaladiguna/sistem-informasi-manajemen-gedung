@@ -57,24 +57,46 @@
                         <h5 class="text-center mb-0" id="totalPriceDisplayRent">Pilih ruangan untuk melihat biaya</h5>
                     </div>
 
-                    {{-- Opsi Pembayaran (tetap sama) --}}
+                    {{-- Opsi Pembayaran --}}
                     <div class="mb-3">
                         <label for="payment_method_rent" class="form-label">Metode Pembayaran</label>
                         <select class="form-select" name="payment_method" id="payment_method_rent" required>
                             <option value="" selected disabled>-- Pilih Metode --</option>
-                            <option value="Cash">Cash</option>
-                            <option value="Transfer">Transfer</option>
+                            <option value="Cash" {{ old('payment_method') == 'Cash' ? 'selected' : '' }}>Cash</option>
+                            <option value="Transfer" {{ old('payment_method') == 'Transfer' ? 'selected' : '' }}>Transfer</option>
                         </select>
                     </div>
-                    <div class="alert alert-info" id="rekeningInfoFieldRent" style="display: none;">
-                        <strong>Silakan transfer ke rekening berikut:</strong><br>
-                        Bank ABC, No. Rek: 1234567890, A/N: PT. Pengelola Gedung
+
+                    {{-- Petunjuk untuk Cash --}}
+                    <div class="alert alert-info" id="cashInfoField" style="display: none;">
+                        <strong>Petunjuk Pembayaran Tunai (Cash):</strong><br>
+                        Silakan lakukan pembayaran langsung di kantor pengelola gedung kami. <br>
+                        Untuk informasi lebih lanjut atau untuk membuat janji, hubungi Kepala Gedung di nomor <strong>0812-3456-7890</strong>.
                     </div>
-                    <div class="mb-3" id="buktiPembayaranFieldRent" style="display: none;">
-                        <label for="payment_proof" class="form-label">Upload Bukti Pembayaran</label>
-                        <input class="form-control @error('payment_proof') is-invalid @enderror" type="file" id="payment_proof" name="payment_proof">
-                        @error('payment_proof')<div class="invalid-feedback">{{ $message }}</div>@enderror
+
+                    {{-- Petunjuk untuk Transfer --}}
+                    <div id="transferInfoContainer" style="display: none;">
+                        <div class="alert alert-info">
+                            <strong>Petunjuk Pembayaran Transfer:</strong><br>
+                            Silakan transfer ke rekening berikut: <br>
+                            <strong>Bank Mandiri</strong><br>
+                            No. Rek: <strong>123-456-7890</strong><br>
+                            A/N: <strong>PT. Manajemen Gedung Sejahtera</strong><br>
+                            <hr>
+                            Setelah melakukan transfer, mohon unggah bukti pembayaran Anda.
+                        </div>
+                        <div class="mb-3">
+                            <label for="payment_proof" class="form-label">Upload Bukti Pembayaran</label>
+                            <input class="form-control @error('payment_proof') is-invalid @enderror" type="file" id="payment_proof" name="payment_proof">
+                            @error('payment_proof')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
                     </div>
+
+                    {{-- Catatan Tambahan --}}
+                    <div class="alert alert-secondary mt-3">
+                        <strong>Catatan:</strong> Untuk pembayaran DP (Down Payment) atau pertanyaan lainnya, silakan hubungi Kepala Gedung di nomor <strong>0812-3456-7890</strong>.
+                    </div>
+
                     <div id="booking-validation-message" class="alert alert-danger mt-3" style="display: none;"></div>
 
                     <div class="modal-footer">
@@ -136,33 +158,43 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Listen to all relevant events
     roomSelect.addEventListener('input', validateAvailability);
     eventDateInput.addEventListener('input', validateAvailability);
     timeSlotSelect.addEventListener('input', validateAvailability);
 
-    // Also check on modal show (Bootstrap 5 event)
+    // --- Payment Method Logic ---
+    const paymentMethodSelect = document.getElementById('payment_method_rent');
+    const cashInfoField = document.getElementById('cashInfoField');
+    const transferInfoContainer = document.getElementById('transferInfoContainer');
+    const paymentProofInput = document.getElementById('payment_proof');
+
+    function togglePaymentFields() {
+        const selectedMethod = paymentMethodSelect.value;
+
+        cashInfoField.style.display = selectedMethod === 'Cash' ? 'block' : 'none';
+        transferInfoContainer.style.display = selectedMethod === 'Transfer' ? 'block' : 'none';
+
+        if (selectedMethod === 'Transfer') {
+            paymentProofInput.setAttribute('required', 'required');
+        } else {
+            paymentProofInput.removeAttribute('required');
+        }
+    }
+
+    paymentMethodSelect.addEventListener('change', togglePaymentFields);
+
     rentModalEl.addEventListener('shown.bs.modal', function () {
         validateAvailability();
+        togglePaymentFields();
     });
 
-    // Initial check
+    // Initial checks
     validateAvailability();
+    togglePaymentFields();
 
-    // Prevent form submit if slot is booked
     rentForm.addEventListener('submit', function(e) {
-        const selectedRoomId = roomSelect.value;
-        const selectedDate = eventDateInput.value;
-        const selectedSlot = timeSlotSelect.value;
-        const sessionName = selectedSlot.charAt(0).toUpperCase() + selectedSlot.slice(1);
-        roomBookings = allBookings[selectedRoomId] || [];
-        const isAlreadyBooked = roomBookings.some(booking => {
-            return booking.date === selectedDate && booking.session === sessionName;
-        });
-        if (isAlreadyBooked) {
-            validationMessageDiv.innerHTML = 'Jadwal pada tanggal dan sesi ini <b>sudah terisi</b>. Silakan pilih jadwal lain.';
-            validationMessageDiv.style.display = 'block';
-            submitButton.disabled = true;
+        validateAvailability(); // Re-validate before submit
+        if (submitButton.disabled) {
             e.preventDefault();
             e.stopPropagation();
             return false;

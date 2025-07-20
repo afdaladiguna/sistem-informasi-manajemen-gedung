@@ -123,6 +123,9 @@
                     @endfor
                 </tbody>
             </table>
+            <div class="alert alert-info mt-3">
+                <strong>Catatan:</strong> Jadwal hanya menampilkan 7 hari ke depan. Untuk pertanyaan mengenai ketersediaan di luar jadwal yang tertera atau untuk permintaan khusus, silakan hubungi Kepala Gedung di nomor <strong>0812-3456-7890</strong>.
+            </div>
         </div>
     </div>
 </div>

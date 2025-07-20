@@ -59,5 +59,13 @@
       </div>
     </div>
   </div>
+  <div class="contact-us mt-4">
+    <h1 class="text-center">HUBUNGI KAMI</h1>
+    <div class="section-description text-center">
+        <p>Jika Anda memiliki pertanyaan lebih lanjut atau memerlukan bantuan, jangan ragu untuk menghubungi kami:</p>
+        <p><strong>Kepala Gedung:</strong> 0812-3456-7890</p>
+        <p><strong>Email:</strong> support@gedungsejahtera.com</p>
+    </div>
+  </div>
 </div>
 @endsection

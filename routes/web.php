@@ -43,6 +43,10 @@ Route::post('/register', [RegisterController::class, 'store'])->middleware('gues
 
 
 Route::get('dashboard/rents/{id}/endTransaction', [DashboardRentController::class, 'endTransaction'])->middleware('auth');
+Route::get('dashboard/rents/{id}/invoice', [DashboardRentController::class, 'generateInvoice'])->middleware('auth');
+Route::get('dashboard/rents/export-pdf', [DashboardRentController::class, 'exportPdf'])->middleware('auth');
+
+
 
 Route::resource('dashboard/rents', DashboardRentController::class)->middleware('auth');
 

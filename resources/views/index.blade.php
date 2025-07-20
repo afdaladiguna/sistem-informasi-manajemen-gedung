@@ -10,6 +10,11 @@
   </div>
 </div>
 <div class="list-ruangan d-flex flex-wrap justify-content-center">
+  <div class="col-12 text-center mb-4">
+    <div class="alert alert-info">
+      <strong>Ada pertanyaan?</strong> Hubungi Kepala Gedung di nomor <strong>0812-3456-7890</strong> untuk informasi lebih lanjut.
+    </div>
+  </div>
   @foreach ($rooms as $room)
   {{-- Card untuk setiap ruangan --}}
   <div class="card m-3" style="width: 18rem;">

@@ -199,4 +199,21 @@ class DashboardRentController extends Controller
         ]);
         return redirect('/dashboard/rents');
     }
+
+    public function generateInvoice($id)
+    {
+        $rent = Rent::with(['user', 'room'])->findOrFail($id);
+
+        return view('dashboard.invoice', [
+            'title' => 'Invoice',
+            'rent' => $rent,
+        ]);
+    }
+
+    public function exportPdf()
+    {
+        $rents = Rent::all();
+        $pdf = \PDF::loadView('dashboard.report', ['rents' => $rents]);
+        return $pdf->download('laporan-peminjaman.pdf');
+    }
 }
