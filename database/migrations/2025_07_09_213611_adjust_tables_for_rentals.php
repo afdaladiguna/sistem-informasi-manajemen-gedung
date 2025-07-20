@@ -3,41 +3,27 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
-        // 1. Mengubah tabel users
-        Schema::table('users', function (Blueprint $table) {
-            // Pastikan kolomnya ada sebelum mengubah nama
-            if (Schema::hasColumn('users', 'nomor_induk')) {
-                $table->renameColumn('nomor_induk', 'phone_number');
-            }
-        });
+        // 1. Rename column using raw SQL for MariaDB/MySQL compatibility
+        if (Schema::hasColumn('users', 'nomor_induk')) {
+            DB::statement('ALTER TABLE users CHANGE nomor_induk phone_number VARCHAR(255) UNIQUE NULL');
+        }
 
-        // 2. Mengubah tabel rooms
-        Schema::table('rooms', function (Blueprint $table) {
-            // Pastikan kolomnya ada sebelum dihapus
-            if (Schema::hasColumn('rooms', 'building_id')) {
-                // HAPUS BARIS INI: $table->dropForeign(['building_id']);
+        // 2. Drop building_id from rooms (no need to drop foreign key if it doesn't exist)
+        if (Schema::hasColumn('rooms', 'building_id')) {
+            Schema::table('rooms', function (Blueprint $table) {
                 $table->dropColumn('building_id');
-            }
-        });
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
-        //
+        // You can implement reverse logic if needed
     }
 };

@@ -41,13 +41,29 @@ class DashboardRentController extends Controller
             ];
         }
 
+        // Get all relevant bookings
+        $bookings = Rent::whereIn('status', ['pending', 'disetujui'])->get();
+
+        // Group bookings by room_id and date/session
+        $schedule = [];
+        foreach ($bookings as $booking) {
+            $date = Carbon::parse($booking->time_start_use)->format('Y-m-d');
+            $session = (Carbon::parse($booking->time_start_use)->hour < 17) ? 'siang' : 'malam';
+            $schedule[$booking->room_id][$date][$session] = [
+                'user' => $booking->user->name ?? '-',
+                'purpose' => $booking->purpose ?? '-',
+                'status' => $booking->status,
+            ];
+        }
+
         return view('dashboard.rents.index', [
             'title' => "Peminjaman",
             'adminRents' => Rent::latest()->get(),
             'userRents' => Rent::where('user_id', auth()->user()->id)->get(),
             'rooms' => Room::all(),
             // 3. PERBAIKAN UTAMA: Pastikan output selalu objek JSON, bahkan saat kosong
-            'bookings' => json_encode((object) $formattedBookings)
+            'bookings' => json_encode((object) $formattedBookings),
+            'schedule' => $schedule, // Nested array: [room_id][date][session]
         ]);
     }
 
@@ -100,10 +116,7 @@ class DashboardRentController extends Controller
             ->exists();
 
         if ($isBooked) {
-            // Jika sudah ada, kembalikan dengan pesan error
-            return redirect()->back()
-                ->withErrors(['event_date' => 'Jadwal yang Anda pilih untuk ruangan ini sudah di-booking. Silakan pilih tanggal atau sesi lain.'])
-                ->withInput(); // Bawa kembali input lama
+            return redirect()->back()->with('rentError', 'Reservasi gagal: Jadwal pada tanggal tersebut sudah terisi. Mohon pilih tanggal atau sesi lain.')->withInput();
         }
 
         // 4. Lanjutkan proses jika jadwal tersedia

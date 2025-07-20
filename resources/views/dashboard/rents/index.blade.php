@@ -17,9 +17,6 @@
     </div>
     @endif
     @if (auth()->user()->role_id <= 4)
-      <button type="button" class="mb-3 btn button btn-primary" data-bs-toggle="modal" data-bs-target="#pinjamRuangan">
-      Sewa
-      </button>
       @endif
       <div class="table-responsive">
         <table class="table table-hover table-stripped table-bordered text-center dt-head-center" id="datatable">
@@ -101,5 +98,6 @@
       </div>
   </div>
 </div>
+
 @extends('dashboard.partials.rentModal')
 @endsection

@@ -44,28 +44,29 @@
               </tr>
             </thead>
             <tbody>
-              @foreach ($rooms as $room)
-              <tr>
-                <th>{{ $loop->iteration }}</th>
-                <td><a href="/dashboard/rooms/{{ $room->code }}" class="text-decoration-none" role="button">{{ $room->name }}</a></td>
-                <td>{{ $room->code }}</td>
-
-                {{-- DATA HARGA DITAMPILKAN DI SINI --}}
-                <td class="text-nowrap">{{ 'Rp ' . number_format($room->price, 0, ',', '.') }}</td>
-
-                @if (auth()->user()->role_id <= 2)
-                  <td style="font-size: 22px;">
-                  <a href="#" class="bi bi-pencil-square text-warning border-0 edit-room-button" data-url="/dashboard/rooms/{{ $room->code }}/edit" data-bs-toggle="modal" data-bs-target="#editRoom"></a>
-                  &nbsp;
-                  <form action="/dashboard/rooms/{{ $room->code }}" method="post" class="d-inline">
-                    @method('delete')
-                    @csrf
-                    <button type="submit" class="bi bi-trash-fill text-danger border-0" style="background: transparent;" onclick="return confirm('Hapus data ruangan?')"></button>
-                  </form>
-                  </td>
+              @forelse ($rooms as $room)
+                <tr>
+                  <th>{{ $loop->iteration }}</th>
+                  <td><a href="/dashboard/rooms/{{ $room->code }}" class="text-decoration-none" role="button">{{ $room->name }}</a></td>
+                  <td>{{ $room->code }}</td>
+                  <td class="text-nowrap">{{ 'Rp ' . number_format($room->price, 0, ',', '.') }}</td>
+                  @if (auth()->user()->role_id <= 2)
+                    <td style="font-size: 22px;">
+                      <a href="#" class="bi bi-pencil-square text-warning border-0 edit-room-button" data-url="/dashboard/rooms/{{ $room->code }}/edit" data-bs-toggle="modal" data-bs-target="#editRoom"></a>
+                      &nbsp;
+                      <form action="/dashboard/rooms/{{ $room->code }}" method="post" class="d-inline">
+                        @method('delete')
+                        @csrf
+                        <button type="submit" class="bi bi-trash-fill text-danger border-0" style="background: transparent;" onclick="return confirm('Hapus data ruangan?')"></button>
+                      </form>
+                    </td>
                   @endif
-              </tr>
-              @endforeach
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="5">Tidak ada data ruangan.</td>
+                </tr>
+              @endforelse
             </tbody>
           </table>
         </div>

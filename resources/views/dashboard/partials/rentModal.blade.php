@@ -87,119 +87,87 @@
     </div>
 </div>
 
+<?php if(session('rentError')): ?>
+<script>
+    alert("{{ session('rentError') }}");
+</script>
+<?php endif; ?>
+
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const rentModalEl = document.getElementById('sewaRuangan');
-        if (!rentModalEl) return;
+document.addEventListener('DOMContentLoaded', function() {
+    const rentModalEl = document.getElementById('sewaRuangan');
+    if (!rentModalEl) return;
 
-        // --- Ambil semua elemen form ---
-        const roomSelect = document.getElementById('room_id_rent');
-        const eventDateInput = document.getElementById('event_date');
-        const timeSlotSelect = document.getElementById('time_slot');
-        const submitButton = document.getElementById('submit-rent-btn');
+    const roomSelect = document.getElementById('room_id_rent');
+    const eventDateInput = document.getElementById('event_date');
+    const timeSlotSelect = document.getElementById('time_slot');
+    const submitButton = document.getElementById('submit-rent-btn');
+    const validationMessageDiv = document.getElementById('booking-validation-message');
+    const rentForm = rentModalEl.querySelector('form[action="/dashboard/rents"]');
+    const allBookings = JSON.parse(rentModalEl.getAttribute('data-bookings') || '{}');
+    let roomBookings = [];
 
-        // --- Ambil semua elemen untuk display info ---
-        const priceDisplay = document.getElementById('totalPriceDisplayRent');
-        const bookedInfoDiv = document.getElementById('booked-dates-info');
-        const bookedListUl = document.getElementById('booked-list');
-        const validationMessageDiv = document.getElementById('booking-validation-message');
+    function validateAvailability() {
+        const selectedRoomId = roomSelect.value;
+        const selectedDate = eventDateInput.value;
+        const selectedSlot = timeSlotSelect.value;
 
-        // --- Ambil & proses data booking ---
-        const allBookings = JSON.parse(rentModalEl.getAttribute('data-bookings') || '{}');
+        roomBookings = allBookings[selectedRoomId] || [];
 
-        // DEBUG: Cek console browser (F12) untuk memastikan data ini ada
-        console.log("Data Booking dari Controller:", allBookings);
-
-        let roomBookings = []; // Simpan booking untuk ruangan yang dipilih
-
-        // --- FUNGSI-FUNGSI UTAMA ---
-
-        function displayBookedDates() {
-            const selectedRoomId = roomSelect.value;
-            roomBookings = allBookings[selectedRoomId] || [];
-            bookedListUl.innerHTML = '';
-
-            if (roomBookings.length > 0) {
-                roomBookings.forEach(booking => {
-                    const li = document.createElement('li');
-                    li.textContent = `${booking.display}`;
-                    bookedListUl.appendChild(li);
-                });
-                bookedInfoDiv.style.display = 'block';
-            } else {
-                bookedInfoDiv.style.display = 'none';
-            }
+        if (!selectedDate || !selectedSlot || !selectedRoomId) {
+            submitButton.disabled = true;
+            validationMessageDiv.style.display = 'none';
+            return;
         }
 
-        function displayPrice() {
-            const selectedOption = roomSelect.options[roomSelect.selectedIndex];
-            const pricePerDay = parseFloat(selectedOption.getAttribute('data-price'));
-            priceDisplay.textContent = pricePerDay > 0 ?
-                'Biaya Sewa: ' + new Intl.NumberFormat('id-ID', {
-                    style: 'currency',
-                    currency: 'IDR',
-                    minimumFractionDigits: 0
-                }).format(pricePerDay) :
-                'Pilih ruangan untuk melihat biaya';
-        }
-
-        function validateAvailability() {
-            const selectedDate = eventDateInput.value;
-            const selectedSlot = timeSlotSelect.value;
-
-            if (!selectedDate || !selectedSlot || !roomSelect.value) {
-                submitButton.disabled = false;
-                validationMessageDiv.style.display = 'none';
-                return;
-            }
-
-            const isAlreadyBooked = roomBookings.some(booking => {
-                const sessionName = selectedSlot.charAt(0).toUpperCase() + selectedSlot.slice(1);
-                return booking.date === selectedDate && booking.session === sessionName;
-            });
-
-            if (isAlreadyBooked) {
-                validationMessageDiv.textContent = 'Jadwal pada tanggal dan sesi ini tidak tersedia.';
-                validationMessageDiv.style.display = 'block';
-                submitButton.disabled = true;
-            } else {
-                validationMessageDiv.style.display = 'none';
-                submitButton.disabled = false;
-            }
-        }
-
-        // --- EVENT LISTENERS ---
-
-        roomSelect.addEventListener('change', function() {
-            displayBookedDates();
-            displayPrice();
-            validateAvailability();
+        const sessionName = selectedSlot.charAt(0).toUpperCase() + selectedSlot.slice(1);
+        const isAlreadyBooked = roomBookings.some(booking => {
+            return booking.date === selectedDate && booking.session === sessionName;
         });
 
-        eventDateInput.addEventListener('change', validateAvailability);
-        timeSlotSelect.addEventListener('change', validateAvailability);
+        if (isAlreadyBooked) {
+            validationMessageDiv.innerHTML = 'Jadwal pada tanggal dan sesi ini <b>sudah terisi</b>. Silakan pilih jadwal lain.';
+            validationMessageDiv.style.display = 'block';
+            submitButton.disabled = true;
+        } else {
+            validationMessageDiv.style.display = 'none';
+            submitButton.disabled = false;
+        }
+    }
 
-        // --- Logika untuk metode pembayaran ---
-        const paymentMethodSelect = document.getElementById('payment_method_rent');
-        const buktiPembayaranField = document.getElementById('buktiPembayaranFieldRent');
-        const rekeningInfoField = document.getElementById('rekeningInfoFieldRent');
+    // Listen to all relevant events
+    roomSelect.addEventListener('input', validateAvailability);
+    eventDateInput.addEventListener('input', validateAvailability);
+    timeSlotSelect.addEventListener('input', validateAvailability);
 
-        paymentMethodSelect.addEventListener('change', function() {
-            const isTransfer = this.value === 'Transfer';
-            buktiPembayaranField.style.display = isTransfer ? 'block' : 'none';
-            rekeningInfoField.style.display = isTransfer ? 'block' : 'none';
+    // Also check on modal show (Bootstrap 5 event)
+    rentModalEl.addEventListener('shown.bs.modal', function () {
+        validateAvailability();
+    });
+
+    // Initial check
+    validateAvailability();
+
+    // Prevent form submit if slot is booked
+    rentForm.addEventListener('submit', function(e) {
+        const selectedRoomId = roomSelect.value;
+        const selectedDate = eventDateInput.value;
+        const selectedSlot = timeSlotSelect.value;
+        const sessionName = selectedSlot.charAt(0).toUpperCase() + selectedSlot.slice(1);
+        roomBookings = allBookings[selectedRoomId] || [];
+        const isAlreadyBooked = roomBookings.some(booking => {
+            return booking.date === selectedDate && booking.session === sessionName;
         });
+        if (isAlreadyBooked) {
+            validationMessageDiv.innerHTML = 'Jadwal pada tanggal dan sesi ini <b>sudah terisi</b>. Silakan pilih jadwal lain.';
+            validationMessageDiv.style.display = 'block';
+            submitButton.disabled = true;
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
     });
-
-    // SCRIPT UNTUK MEMBUKA KEMBALI MODAL JIKA ADA ERROR DARI BACKEND
-    // INI BAGIAN YANG DIPERBAIKI (spasi dihapus)
-    // prettier-ignore
-    @if($errors->any())
-    document.addEventListener('DOMContentLoaded', function() {
-        var errorModal = new bootstrap.Modal(document.getElementById('sewaRuangan'));
-        errorModal.show();
-    });
-    @endif
+});
 </script>
 @endpush

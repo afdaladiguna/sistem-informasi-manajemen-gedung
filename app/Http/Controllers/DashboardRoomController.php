@@ -88,45 +88,46 @@ class DashboardRoomController extends Controller
      * @param  \App\Models\Room  $room
      * @return \Illuminate\Http\Response
      */
-    public function show(Room $room)
+   public function show(Room $room)
     {
-        // ===================================================================
-        // SALIN LOGIKA PERSIAPAN BOOKING DARI CONTROLLER SEBELUMNYA KE SINI
-        // ===================================================================
-
-        // Atur locale Carbon ke Bahasa Indonesia
+        // Set locale to Indonesian for date formatting
         Carbon::setLocale('id');
 
-        // 1. Ambil semua booking yang relevan
-        $allBookings = Rent::whereIn('status', ['pending', 'disetujui'])->get();
+        // 1. Define the date range. We fetch a bit more for any potential JS datepickers in the modal.
+        // The view itself will only display 7 days.
+        $startDate = Carbon::today();
+        $endDate = Carbon::today()->addDays(30);
 
-        // 2. Kelompokkan booking berdasarkan room_id
-        $formattedBookings = [];
-        foreach ($allBookings as $booking) {
+        // 2. Fetch approved/pending bookings for all rooms within this date range.
+        // Eager load the 'user' relationship to prevent N+1 query issues.
+        $bookings = Rent::whereIn('status', ['pending', 'disetujui'])
+                        ->whereBetween('time_start_use', [$startDate, $endDate])
+                        ->with('user')
+                        ->get();
+
+        // 3. Process bookings into a schedule array for the view's availability table.
+        $schedule = [];
+        foreach ($bookings as $booking) {
             $date = Carbon::parse($booking->time_start_use)->format('Y-m-d');
-            $startTime = Carbon::parse($booking->time_start_use)->hour;
-            $session = ($startTime < 17) ? 'Siang' : 'Malam';
+            // Session is 'siang' if start time is before 5 PM (17:00), otherwise 'malam'.
+            $session = (Carbon::parse($booking->time_start_use)->hour < 17) ? 'siang' : 'malam';
 
-            $formattedBookings[$booking->room_id][] = [
-                'date' => $date,
-                'session' => $session,
-                'display' => Carbon::parse($date)->isoFormat('D MMMM YYYY') . ' (' . $session . ')'
+            $schedule[$booking->room_id][$date][$session] = [
+                'user'    => $booking->user->name ?? 'Data tidak ditemukan',
+                'purpose' => $booking->purpose,
+                'status'  => $booking->status,
             ];
         }
-        // ===================================================================
-        // AKHIR DARI LOGIKA YANG DISALIN
-        // ===================================================================
 
-        // Sekarang kirim semua data yang diperlukan ke view
+        // 4. Send the required data to the view.
         return view('dashboard.rooms.show', [
-            'title' => $room->name,
-            'room' => $room,
-            'rooms' => Room::all(), // rooms diperlukan untuk modal
-            'rents' => Rent::where('room_id', $room->id)->get(),
-            'bookings' => json_encode((object) $formattedBookings) // <-- TAMBAHKAN INI
-            
+            'title'    => "Detail Ruangan: " . $room->name,
+            'room'     => $room,
+            'rooms'    => Room::all(), // Needed for the 'Sewa Ruangan' modal dropdown
+            'schedule' => $schedule,  // The new schedule array for the availability table
         ]);
     }
+
 
     /**
      * Show the form for editing the specified resource.

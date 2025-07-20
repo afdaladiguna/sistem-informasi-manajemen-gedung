@@ -11,14 +11,14 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
-    {
-        // Perintah untuk menghapus tabel-tabel
-        Schema::dropIfExists('admins');
-        Schema::dropIfExists('buildings');
-        Schema::dropIfExists('faculties');
-        Schema::dropIfExists('failed_jobs');
-    }
+    // public function up()
+    // {
+    //     // Perintah untuk menghapus tabel-tabel
+    //     Schema::dropIfExists('admins');
+    //     Schema::dropIfExists('buildings');
+    //     Schema::dropIfExists('faculties');
+    //     Schema::dropIfExists('failed_jobs');
+    // }
 
     /**
      * Reverse the migrations.

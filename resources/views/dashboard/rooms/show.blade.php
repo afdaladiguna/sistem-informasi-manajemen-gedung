@@ -70,44 +70,57 @@
     </article>
 
     {{-- Judul diubah agar konsisten --}}
-    <h2 class="content-title text-center" style="margin-top: 20px;">Jadwal Reservasi Ruangan</h2>
+    <h2 class="content-title text-center" style="margin-top: 20px;">Jadwal Ketersediaan Ruangan</h2>
 
     <div class="card-body text-end me-3">
-        <div class="d-flex justify-content-between align-items-center">
-            {{-- Bagian filter tanggal tetap sama --}}
-            <div class="input-group mb-3 filter-tgl-wrap">
-                ...
-            </div>
-            @if (auth()->user()->role_id <= 4)
-                {{-- Tombol disesuaikan untuk memanggil modal yang benar --}}
-                <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#sewaRuangan">Sewa</button>
-                @endif
-        </div>
+        @if (auth()->user()->role_id <= 4)
+            <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#sewaRuangan">Sewa Ruangan</button>
+        @endif
+
         <div class="table-responsive">
-            <table class="table table-hover table-stripped table-bordered text-center dt-head-center" id="datatable">
+            <table class="table table-bordered text-center">
                 <thead class="table-info">
                     <tr>
-                        <th scope="row">No.</th>
-                        <th scope="row">Nama Penyewa</th>
-                        <th scope="row">Mulai Sewa</th>
-                        <th scope="row">Selesai Sewa</th>
-                        <th scope="row">Tujuan</th>
-                        <th scope="row">Waktu Transaksi</th>
-                        <th scope="row">Status</th>
+                        <th>Tanggal</th>
+                        <th>Sesi</th>
+                        <th>Status</th>
+                        <th>Peminjam</th>
+                        <th>Tujuan</th>
                     </tr>
                 </thead>
-                <tbody class="rent-details">
-                    @foreach ($rents as $rent)
-                    <tr class="rent-detail">
-                        <th scope="row">{{ $loop->iteration }}</th>
-                        <td>{{ $rent->user->name }}</td>
-                        <td class="detail-rent-room_start-time">{{ \Carbon\Carbon::parse($rent->time_start_use)->format('d/m/y H:i') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($rent->time_end_use)->format('d/m/y H:i') }}</td>
-                        <td>{{ $rent->purpose }}</td>
-                        <td>{{ $rent->created_at->format('d/m/y H:i') }}</td>
-                        <td><span class="badge bg-success">{{ $rent->status }}</span></td>
-                    </tr>
-                    @endforeach
+                <tbody>
+                    @php
+                        // Show next 7 days from today
+                        $today = \Carbon\Carbon::today();
+                    @endphp
+                    @for ($i = 0; $i < 7; $i++)
+                        @php
+                            $date = $today->copy()->addDays($i)->format('Y-m-d');
+                        @endphp
+                        @foreach (['Siang', 'Malam'] as $session)
+                            <tr>
+                                @if ($loop->first)
+                                    <td rowspan="2" style="vertical-align: middle;">
+                                        {{ \Carbon\Carbon::parse($date)->isoFormat('dddd, D MMMM YYYY') }}
+                                    </td>
+                                @endif
+                                <td>{{ $session }}</td>
+                                @php
+                                    // Use strtolower for checking the array key
+                                    $sessionKey = strtolower($session);
+                                @endphp
+                                @if (isset($schedule[$room->id][$date][$sessionKey]))
+                                    <td class="text-danger">Terisi</td>
+                                    <td>{{ $schedule[$room->id][$date][$sessionKey]['user'] }}</td>
+                                    <td>{{ $schedule[$room->id][$date][$sessionKey]['purpose'] }}</td>
+                                @else
+                                    <td class="text-success">Tersedia</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                @endif
+                            </tr>
+                        @endforeach
+                    @endfor
                 </tbody>
             </table>
         </div>
