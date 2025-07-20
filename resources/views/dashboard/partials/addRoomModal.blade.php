@@ -19,9 +19,10 @@
                         @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class='mb-3'>
-                        <label for='img' class='form-label'>Foto Ruangan (Opsional)</label>
-                        <input class="form-control @error('img') is-invalid @enderror" type='file' id='img' name='img' />
-                        @error('img')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <label for='images' class='form-label'>Foto-foto Ruangan (Bisa lebih dari satu)</label>
+                        <input class="form-control @error('images') is-invalid @enderror" type='file' id='images' name='images[]' multiple />
+                        @error('images')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        @error('images.*')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                     <div class="mb-3">
                         <label for="type" class="form-label">Tipe Ruangan</label>

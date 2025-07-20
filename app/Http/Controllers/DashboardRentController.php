@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Rent;
 use App\Models\Room;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class DashboardRentController extends Controller
 {
@@ -13,13 +14,40 @@ class DashboardRentController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    // app/Http/Controllers/DashboardRentController.php
+
     public function index()
     {
+        // Atur locale Carbon ke Bahasa Indonesia untuk format tanggal
+        Carbon::setLocale('id');
+
+        // 1. Ambil semua booking yang relevan (pending atau sudah disetujui)
+        $bookings = Rent::whereIn('status', ['pending', 'disetujui'])->get();
+
+        // 2. Kelompokkan booking berdasarkan room_id untuk kemudahan di JavaScript
+        $formattedBookings = [];
+        foreach ($bookings as $booking) {
+            $date = Carbon::parse($booking->time_start_use)->format('Y-m-d');
+            $startTime = Carbon::parse($booking->time_start_use)->hour;
+
+            // Tentukan sesi Siang atau Malam
+            $session = ($startTime < 17) ? 'Siang' : 'Malam';
+
+            // 'isoFormat' akan menggunakan locale 'id' yang sudah di-set
+            $formattedBookings[$booking->room_id][] = [
+                'date' => $date,
+                'session' => $session,
+                'display' => Carbon::parse($date)->isoFormat('D MMMM YYYY') . ' (' . $session . ')'
+            ];
+        }
+
         return view('dashboard.rents.index', [
+            'title' => "Peminjaman",
             'adminRents' => Rent::latest()->get(),
             'userRents' => Rent::where('user_id', auth()->user()->id)->get(),
-            'title' => "Peminjaman",
             'rooms' => Room::all(),
+            // 3. PERBAIKAN UTAMA: Pastikan output selalu objek JSON, bahkan saat kosong
+            'bookings' => json_encode((object) $formattedBookings)
         ]);
     }
 
@@ -42,26 +70,52 @@ class DashboardRentController extends Controller
 
     public function store(Request $request)
     {
+        // 1. Validasi input baru
         $validatedData = $request->validate([
-            'room_id' => 'required',
-            'time_start_use' => 'required|date',
-            'time_end_use' => 'required|date|after:time_start_use',
+            'room_id' => 'required|exists:rooms,id',
+            'event_date' => 'required|date|after_or_equal:today',
+            'time_slot' => 'required|in:siang,malam',
             'purpose' => 'required|max:250',
             'payment_method' => 'required|string',
-            // Validasi bukti pembayaran: wajib jika metode transfer, harus gambar, maks 2MB
             'payment_proof' => 'required_if:payment_method,Transfer|image|file|max:2048',
         ]);
 
-        // Proses upload file jika ada
+        // 2. Rekonstruksi waktu mulai dan selesai dari tanggal dan sesi
+        $eventDate = Carbon::parse($request->event_date);
+        if ($request->time_slot == 'siang') {
+            $time_start_use = $eventDate->copy()->setTime(8, 0, 0);
+            $time_end_use = $eventDate->copy()->setTime(16, 0, 0);
+        } else { // malam
+            $time_start_use = $eventDate->copy()->setTime(18, 0, 0);
+            $time_end_use = $eventDate->copy()->setTime(23, 0, 0);
+        }
+
+        // 3. Validasi Double Booking di Backend (PALING PENTING)
+        $isBooked = Rent::where('room_id', $request->room_id)
+            ->whereIn('status', ['pending', 'disetujui'])
+            ->where(function ($query) use ($time_start_use, $time_end_use) {
+                $query->where('time_start_use', '<', $time_end_use)
+                    ->where('time_end_use', '>', $time_start_use);
+            })
+            ->exists();
+
+        if ($isBooked) {
+            // Jika sudah ada, kembalikan dengan pesan error
+            return redirect()->back()
+                ->withErrors(['event_date' => 'Jadwal yang Anda pilih untuk ruangan ini sudah di-booking. Silakan pilih tanggal atau sesi lain.'])
+                ->withInput(); // Bawa kembali input lama
+        }
+
+        // 4. Lanjutkan proses jika jadwal tersedia
         if ($request->hasFile('payment_proof')) {
-            // Simpan file di folder 'public/payment-proofs' dan simpan path-nya
             $validatedData['payment_proof'] = $request->file('payment_proof')->store('payment-proofs', 'public');
         }
 
         $validatedData['user_id'] = auth()->user()->id;
         $validatedData['transaction_start'] = now();
         $validatedData['status'] = 'pending';
-        $validatedData['transaction_end'] = null;
+        $validatedData['time_start_use'] = $time_start_use;
+        $validatedData['time_end_use'] = $time_end_use;
 
         Rent::create($validatedData);
 
@@ -114,6 +168,8 @@ class DashboardRentController extends Controller
         return redirect('/dashboard/rents')->with('deleteRent', 'Data peminjaman berhasil dihapus');
     }
 
+
+
     /**
      * Update the specified resource in storage.
      *
@@ -123,13 +179,11 @@ class DashboardRentController extends Controller
      */
     public function endTransaction($id)
     {
-        $transaction = [
+        $rent = Rent::findOrFail($id);
+        $rent->update([
             'transaction_end' => now(),
             'status' => 'selesai',
-        ];
-
-        Rent::where('id', $id)->update($transaction);
-
+        ]);
         return redirect('/dashboard/rents');
     }
 }

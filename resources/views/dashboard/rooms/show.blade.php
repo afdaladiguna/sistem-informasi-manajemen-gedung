@@ -4,11 +4,27 @@
 <div class="col-md-10 p-0">
     <h2 class="content-title text-center mb-3">{{ $room->name }}</h2>
     <article class='explore-detail d-flex flex-wrap' style="margin-left: 20px;" tabindex='0'>
-        <div class='img-container'>
-            @if ($room->img)
-            <img class='explore-item__thumbnail' src='{{ asset('storage/' . $room->img) }}' alt='{{ $room->name . '.jpg' }}' tabindex='0' style="width: 18rem;" />
+        <div class='img-container' style="width: 450px;">
+            @if ($room->images->isNotEmpty())
+            <div id="carouselDetail" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner rounded">
+                    @foreach ($room->images as $key => $image)
+                    <div class="carousel-item {{ $key == 0 ? 'active' : '' }}">
+                        <img src="{{ asset('storage/' . $image->path) }}" class="d-block w-100" style="height: 300px; object-fit: cover;" alt="Gambar {{ $key + 1 }}">
+                    </div>
+                    @endforeach
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselDetail" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselDetail" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
             @else
-            <img class='explore-item__thumbnail' src='{{ asset('img/ruang-kelas.jpeg') }}' alt='Gambar Default' tabindex='0' style="width: 18rem;" />
+            <img src="{{ asset('img/ruang-kelas.jpeg') }}" class="d-block w-100 rounded" style="height: 300px; object-fit: cover;" alt="Gambar Default">
             @endif
         </div>
 
