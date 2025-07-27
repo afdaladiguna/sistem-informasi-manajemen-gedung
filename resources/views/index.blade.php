@@ -1,13 +1,61 @@
 @extends('layouts.main')
 
 @section('container')
-<div class="hero">
+<div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+  <div class="carousel-inner">
+    @foreach ($rooms as $key => $room)
+    <div class="carousel-item {{ $key == 0 ? 'active' : '' }}">
+      @if ($room->images->isNotEmpty())
+      <img src="{{ asset('storage/' . $room->images->first()->path) }}" class="d-block w-100 hero-carousel-img" alt="{{ $room->name }}">
+      @else
+      <img src="{{ asset('img/ruang-kelas.jpeg') }}" class="d-block w-100 hero-carousel-img" alt="Gambar Default">
+      @endif
+      <div class="carousel-caption d-none d-md-block">
+        <h5>{{ $room->name }}</h5>
+        <p>{{ Str::limit($room->description, 100) }}</p>
+      </div>
+    </div>
+    @endforeach
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+  <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+  <div class="carousel-inner">
+    @foreach ($rooms as $key => $room)
+    <div class="carousel-item {{ $key == 0 ? 'active' : '' }}">
+      @if ($room->images->isNotEmpty())
+      <img src="{{ asset('storage/' . $room->images->first()->path) }}" class="d-block w-100 hero-carousel-img" alt="{{ $room->name }}">
+      @else
+      <img src="{{ asset('img/ruang-kelas.jpeg') }}" class="d-block w-100 hero-carousel-img" alt="Gambar Default">
+      @endif
+      <div class="carousel-caption d-none d-md-block">
+        <h5>{{ $room->name }}</h5>
+        <p>{{ Str::limit($room->description, 100) }}</p>
+      </div>
+    </div>
+    @endforeach
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
   <div class="hero__inner container">
     <div class="hero-description">
-      <h2>Asrama Haji Embarkasi Sudiang</h2>
-      <p>Sistem Informasi Penyewaan Ruangan Gedung</p>
+      <h2>Temukan Ruangan Ideal Anda di Asrama Haji Embarkasi Sudiang</h2>
+      <p>Sewa ruangan serbaguna untuk berbagai acara, dari seminar hingga pertemuan penting. Fasilitas lengkap, lokasi strategis, dan harga terjangkau menanti Anda!</p>
     </div>
   </div>
+</div>
 </div>
 <div class="list-ruangan d-flex flex-wrap justify-content-center">
   <div class="col-12 text-center mb-4">

@@ -68,24 +68,24 @@
                     </div>
 
                     {{-- Petunjuk untuk Cash --}}
-                    <div class="alert alert-info" id="cashInfoField" style="display: none;">
+                    <div class="alert alert-info" id="cashInfoField">
                         <strong>Petunjuk Pembayaran Tunai (Cash):</strong><br>
-                        Silakan lakukan pembayaran langsung di kantor pengelola gedung kami. <br>
+                        Silakan lakukan pembayaran langsung di kantor pemasaran kami yang berlokasi di <a href="https://maps.app.goo.gl/WCRjFnYEsq7BWjPi7" target="_blank">Asrama Haji Embarkasi Sudiang</a>. <br>
                         Untuk informasi lebih lanjut atau untuk membuat janji, hubungi Kepala Gedung di nomor <strong>0812-3456-7890</strong>.
                     </div>
 
                     {{-- Petunjuk untuk Transfer --}}
-                    <div id="transferInfoContainer" style="display: none;">
+                    <div id="transferInfoContainer">
                         <div class="alert alert-info">
                             <strong>Petunjuk Pembayaran Transfer:</strong><br>
-                            Silakan transfer ke rekening berikut: <br>
+                            Silakan transfer ke rekening berikut dan segera unggah bukti pembayaran Anda untuk memproses reservasi. Bukti pembayaran tidak boleh kosong dan harus diunggah saat ini juga. Minimal bukti pembayaran DP (Down Payment) harus disertakan:<br>
                             <strong>Bank Mandiri</strong><br>
                             No. Rek: <strong>123-456-7890</strong><br>
                             A/N: <strong>PT. Manajemen Gedung Sejahtera</strong><br>
                             <hr>
                             Setelah melakukan transfer, mohon unggah bukti pembayaran Anda.
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3" id="paymentProofFieldContainer">
                             <label for="payment_proof" class="form-label">Upload Bukti Pembayaran</label>
                             <input class="form-control @error('payment_proof') is-invalid @enderror" type="file" id="payment_proof" name="payment_proof">
                             @error('payment_proof')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -168,29 +168,70 @@ document.addEventListener('DOMContentLoaded', function() {
     const transferInfoContainer = document.getElementById('transferInfoContainer');
     const paymentProofInput = document.getElementById('payment_proof');
 
+    const paymentProofFieldContainer = document.getElementById('paymentProofFieldContainer');
+
     function togglePaymentFields() {
         const selectedMethod = paymentMethodSelect.value;
 
-        cashInfoField.style.display = selectedMethod === 'Cash' ? 'block' : 'none';
-        transferInfoContainer.style.display = selectedMethod === 'Transfer' ? 'block' : 'none';
-
         if (selectedMethod === 'Transfer') {
             paymentProofInput.setAttribute('required', 'required');
+            paymentProofFieldContainer.style.display = 'block';
         } else {
             paymentProofInput.removeAttribute('required');
+            paymentProofFieldContainer.style.display = 'none';
         }
     }
 
     paymentMethodSelect.addEventListener('change', togglePaymentFields);
 
-    rentModalEl.addEventListener('shown.bs.modal', function () {
-        validateAvailability();
+    const totalPriceDisplayRent = document.getElementById('totalPriceDisplayRent');
+
+    function updatePriceDisplay() {
+        const selectedRoomId = roomSelect.value;
+        const selectedOption = roomSelect.querySelector(`option[value="${selectedRoomId}"]`);
+        const price = selectedOption ? parseFloat(selectedOption.getAttribute('data-price')) : 0;
+
+        if (price > 0) {
+            totalPriceDisplayRent.innerHTML = `Total Biaya: <strong>Rp ${new Intl.NumberFormat('id-ID').format(price)} / hari</strong>`;
+        } else {
+            totalPriceDisplayRent.innerHTML = 'Pilih ruangan untuk melihat biaya';
+        }
+    }
+
+    roomSelect.addEventListener('change', updatePriceDisplay);
+    // Call on initial load and when modal is shown
+    rentModalEl.addEventListener('shown.bs.modal', function (event) {
+        const button = event.relatedTarget; // Button that triggered the modal
+        const roomId = button ? button.getAttribute('data-room-id') : null;
+        console.log('Modal shown. Triggering button data-room-id:', roomId);
+
+        if (roomId) {
+            // Explicitly set the selected option by iterating
+            Array.from(roomSelect.options).forEach(option => {
+                if (option.value === roomId) {
+                    option.selected = true;
+                } else {
+                    option.selected = false;
+                }
+            });
+            console.log('roomSelect.value after explicit selection:', roomSelect.value);
+            // Now that the option is explicitly selected, call the update functions
+            updatePriceDisplay();
+            validateAvailability();
+        } else {
+            // If no roomId, ensure initial state is correct
+            console.log('No roomId from triggering button. Initializing default state.');
+            validateAvailability();
+            updatePriceDisplay();
+        }
+        // Always call togglePaymentFields
         togglePaymentFields();
     });
 
-    // Initial checks
-    validateAvailability();
-    togglePaymentFields();
+    // Initial checks on DOMContentLoaded are removed as they are handled by shown.bs.modal
+    // validateAvailability();
+    // togglePaymentFields();
+    // updatePriceDisplay();
 
     rentForm.addEventListener('submit', function(e) {
         validateAvailability(); // Re-validate before submit

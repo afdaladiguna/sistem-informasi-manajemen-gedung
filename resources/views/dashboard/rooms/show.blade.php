@@ -74,7 +74,7 @@
 
     <div class="card-body text-end me-3">
         @if (auth()->user()->role_id <= 4)
-            <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#sewaRuangan">Sewa Ruangan</button>
+            <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#sewaRuangan" data-room-id="{{ $room->id }}">Sewa Ruangan</button>
         @endif
 
         <div class="table-responsive">

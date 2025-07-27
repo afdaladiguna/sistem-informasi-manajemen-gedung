@@ -18,9 +18,7 @@
     @endif
 
     @if (auth()->user()->role_id <= 4)
-      <button type="button" class="mb-3 btn button btn-primary" data-bs-toggle="modal" data-bs-target="#sewaRuangan">
-      Sewa
-      </button>
+      <p class="text-start mb-3">Pilih ruangan terlebih dahulu untuk melakukan reservasi.</p>
       @endif
 
       @if (auth()->user()->role_id <= 2)
