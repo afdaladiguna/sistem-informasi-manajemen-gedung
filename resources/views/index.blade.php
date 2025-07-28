@@ -34,10 +34,10 @@
       @else
       <img src="{{ asset('img/ruang-kelas.jpeg') }}" class="d-block w-100 hero-carousel-img" alt="Gambar Default">
       @endif
-      <div class="carousel-caption d-none d-md-block">
+      <!-- <div class="carousel-caption d-none d-md-block">
         <h5>{{ $room->name }}</h5>
         <p>{{ Str::limit($room->description, 100) }}</p>
-      </div>
+      </div> -->
     </div>
     @endforeach
   </div>
