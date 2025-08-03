@@ -18,7 +18,31 @@
     @endif
     @if (auth()->user()->role_id <= 4)
       @endif
-      <a href="/dashboard/rents/export-pdf" class="btn btn-primary mb-3">Export to PDF</a>
+      <form action="/dashboard/rents/export-pdf" method="GET" class="d-inline-block mb-3 me-3">
+        <label for="month">Bulan:</label>
+        <select name="month" id="month" class="form-select form-select-sm d-inline-block w-auto me-2">
+          @for ($i = 1; $i <= 12; $i++)
+            <option value="{{ $i }}" {{ (request('month', \Carbon\Carbon::now()->month) == $i) ? 'selected' : '' }}>{{ \Carbon\Carbon::createFromDate(null, $i, 1)->translatedFormat('F') }}</option>
+          @endfor
+        </select>
+        <label for="year">Tahun:</label>
+        <select name="year" id="year" class="form-select form-select-sm d-inline-block w-auto me-2">
+          @for ($i = \Carbon\Carbon::now()->year - 5; $i <= \Carbon\Carbon::now()->year + 1; $i++)
+            <option value="{{ $i }}" {{ (request('year', \Carbon\Carbon::now()->year) == $i) ? 'selected' : '' }}>{{ $i }}</option>
+          @endfor
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm">Export Laporan Bulanan</button>
+      </form>
+
+      <form action="/dashboard/rents/export-pdf" method="GET" class="d-inline-block mb-3">
+        <label for="year_yearly">Tahun:</label>
+        <select name="year" id="year_yearly" class="form-select form-select-sm d-inline-block w-auto me-2">
+          @for ($i = \Carbon\Carbon::now()->year - 5; $i <= \Carbon\Carbon::now()->year + 1; $i++)
+            <option value="{{ $i }}" {{ (request('year', \Carbon\Carbon::now()->year) == $i) ? 'selected' : '' }}>{{ $i }}</option>
+          @endfor
+        </select>
+        <button type="submit" class="btn btn-info btn-sm">Export Laporan Tahunan</button>
+      </form>
       <div class="table-responsive">
         <table class="table table-hover table-stripped table-bordered text-center dt-head-center" id="datatable">
           <thead class="table-info">

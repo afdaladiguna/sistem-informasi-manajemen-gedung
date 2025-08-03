@@ -21,7 +21,15 @@
     </style>
 </head>
 <body>
-    <h2>Laporan Peminjaman Ruangan</h2>
+    <h2>Laporan Peminjaman Ruangan
+        @if ($reportType === 'monthly')
+            Bulan {{ \Carbon\Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y') }}
+        @elseif ($reportType === 'yearly')
+            Tahun {{ $year }}
+        @else
+            Keseluruhan
+        @endif
+    </h2>
     <table>
         <thead>
             <tr>
@@ -31,7 +39,9 @@
                 <th>Mulai Sewa</th>
                 <th>Selesai Sewa</th>
                 <th>Tujuan</th>
+                <th>Metode Pembayaran</th>
                 <th>Status Sewa</th>
+                <th>Harga</th>
             </tr>
         </thead>
         <tbody>
@@ -40,12 +50,18 @@
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $rent->room->code }}</td>
                 <td>{{ $rent->user->name }}</td>
-                <td>{{ $rent->time_start_use }}</td>
-                <td>{{ $rent->time_end_use }}</td>
+                <td>{{ \Carbon\Carbon::parse($rent->time_start_use)->translatedFormat('d M Y H:i') }}</td>
+                <td>{{ \Carbon\Carbon::parse($rent->time_end_use)->translatedFormat('d M Y H:i') }}</td>
                 <td>{{ $rent->purpose }}</td>
+                <td>{{ $rent->payment_method }}</td>
                 <td>{{ $rent->status }}</td>
+                <td>Rp{{ number_format($rent->room->price, 0, ',', '.') }}</td>
             </tr>
             @endforeach
+            <tr>
+                <td colspan="8" style="text-align:right;"><strong>Total Pendapatan:</strong></td>
+                <td><strong>Rp{{ number_format($totalRevenue, 0, ',', '.') }}</strong></td>
+            </tr>
         </tbody>
     </table>
 </body>

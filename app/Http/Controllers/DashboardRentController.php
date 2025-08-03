@@ -210,10 +210,55 @@ class DashboardRentController extends Controller
         ]);
     }
 
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
-        $rents = Rent::all();
-        $pdf = \PDF::loadView('dashboard.report', ['rents' => $rents]);
-        return $pdf->download('laporan-peminjaman.pdf');
+        $month = $request->input('month');
+        $year = $request->input('year');
+
+        $rentsQuery = Rent::with(['room', 'user']);
+
+        if ($month && $year) {
+            // Monthly report
+            $rentsQuery->whereMonth('time_start_use', $month)
+                       ->whereYear('time_start_use', $year);
+            $reportType = 'monthly';
+        } elseif ($year) {
+            // Yearly report
+            $rentsQuery->whereYear('time_start_use', $year);
+            $reportType = 'yearly';
+        } else {
+            // All data report (if no month or year is specified, though forms should prevent this)
+            $reportType = 'all';
+        }
+
+        $rents = $rentsQuery->get();
+
+        $totalRevenue = 0;
+        // Calculate total revenue only for 'selesai' (completed) rents
+        foreach ($rents as $rent) {
+            if ($rent->status === 'selesai' && $rent->room && isset($rent->room->price)) {
+                $totalRevenue += $rent->room->price;
+            }
+        }
+
+        $data = [
+            'rents' => $rents,
+            'month' => $month,
+            'year' => $year,
+            'totalRevenue' => $totalRevenue,
+            'reportType' => $reportType,
+        ];
+
+        $pdf = \PDF::loadView('dashboard.report', $data);
+
+        $filename = 'laporan-peminjaman';
+        if ($reportType === 'monthly') {
+            $filename .= '-' . $month . '-' . $year;
+        } elseif ($reportType === 'yearly') {
+            $filename .= '-' . $year;
+        }
+        $filename .= '.pdf';
+
+        return $pdf->download($filename);
     }
 }
