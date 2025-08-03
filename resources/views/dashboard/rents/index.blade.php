@@ -32,7 +32,7 @@
                 <th scope="row">Selesai Sewa</th>
                 <th scope="row">Tujuan</th>
                 <th scope="row">Waktu Transaksi</th>
-                <th scope="row">Kembalikan</th>
+                <th scope="row">Selesai Reservasi</th>
                 <th scope="row">Status Sewa</th>
                 <th scope="row">Action</th>
             </tr>
@@ -49,7 +49,7 @@
               <td>{{ $rent->purpose }}</td>
               <td>{{ $rent->transaction_start }}</td>
               @if ($rent->status == "disewa")
-              <td><a href="/dashboard/rents/{{ $rent->id }}/endTransaction" class="btn btn-success" type="submit" style="padding: 2px 10px"><i class="bi bi-check fs-5"></i></a></td>
+                                <td>Otomatis Selesai Pukul {{ date('H:i', strtotime($rent->time_end_use)) }}</td>
               @else
               @if(!is_null($rent->transaction_end))
               <td>{{ $rent->transaction_end }}</td>
@@ -81,7 +81,7 @@
                   <td>{{ $rent->purpose }}</td>
                   <td>{{ $rent->transaction_start }}</td>
                   @if ($rent->status == "disewa")
-                  <td><a href="/dashboard/rents/{{ $rent->id }}/endTransaction" class="btn btn-success" type="submit" style="padding: 2px 10px"><i class="bi bi-check fs-5"></i></a></td>
+                                    <td>Otomatis Selesai Pukul {{ date('H:i', strtotime($rent->time_end_use)) }}</td>
                   @else
                   @if(!is_null($rent->transaction_end))
                   <td>{{ $rent->transaction_end }}</td>
